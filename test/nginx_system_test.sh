@@ -298,6 +298,12 @@ check_from "$JS_HEADERS" fgrep -qi 'Last-Modified:'
 
 WGET_ARGS="" # Done with test_filter, so clear WGET_ARGS.
 
+start_test Static js is served compressed
+
+OUT=$(wget -O /dev/null --header='Accept-Encoding: gzip' -q --server-response \
+         $HOSTNAME/ngx_pagespeed_static/js_defer.4Wv5zwfokU.js 2>&1)
+check_from "$OUT" grep 'Content-Encoding: gzip'
+
 start_test Respect X-Forwarded-Proto when told to
 FETCHED=$OUTDIR/x_forwarded_proto
 URL=$SECONDARY_HOSTNAME/mod_pagespeed_example/?ModPagespeedFilters=add_base_tag
@@ -1140,7 +1146,7 @@ http_proxy=$SECONDARY_HOSTNAME check $WGET_DUMP \
   --header 'X-PSA-Blocking-Rewrite: junk' \
   $URL > $OUTFILE
 check [ $(grep -c "[.]pagespeed[.]" $OUTFILE) -lt 1 ]
-  
+
 http_proxy=$SECONDARY_HOSTNAME fetch_until $URL \
   'grep -c [.]pagespeed[.]' 1
 

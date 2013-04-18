@@ -122,6 +122,7 @@ if [ $ngx_found = yes ]; then
   ps_src="$ngx_addon_dir/src"
   ngx_addon_name=ngx_pagespeed
   NGX_ADDON_DEPS="$NGX_ADDON_DEPS \
+    $psol_library_binaries \
     $ps_src/ngx_pagespeed.h \
     $ps_src/ngx_fetch.h \
     $ps_src/ngx_url_async_fetcher.h \

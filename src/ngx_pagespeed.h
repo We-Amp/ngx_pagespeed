@@ -92,6 +92,7 @@ typedef struct {
   bool sent_headers;
   bool write_pending;
   net_instaweb::GzipInflater* inflater_;
+  ngx_buf_t *header_in;
 } ps_request_ctx_t;
 
 }  // namespace ngx_psol

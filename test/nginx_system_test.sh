@@ -85,6 +85,8 @@ else
   RESOLVER=""
 fi
 
+FASTCGI_PARAMS="$this_dir/fastcgi_params"
+
 # set up the config file for the test
 PAGESPEED_CONF="$TEST_TMP/pagespeed_test.conf"
 PAGESPEED_CONF_TEMPLATE="$this_dir/pagespeed_test.conf.template"
@@ -107,6 +109,7 @@ cat $PAGESPEED_CONF_TEMPLATE \
   | sed 's#@@SECONDARY_PORT@@#'"$SECONDARY_PORT"'#' \
   | sed 's#@@NATIVE_FETCHER@@#'"$NATIVE_FETCHER"'#' \
   | sed 's#@@RESOLVER@@#'"$RESOLVER"'#' \
+  | sed 's#@@FASTCGI_PARAMS@@#'"$FASTCGI_PARAMS"'#' \
   >> $PAGESPEED_CONF
 # make sure we substituted all the variables
 check_not_simple grep @@ $PAGESPEED_CONF

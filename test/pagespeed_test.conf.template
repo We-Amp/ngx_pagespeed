@@ -372,6 +372,25 @@ http {
   }
 
   server {
+    listen @@SECONDARY_PORT@@;
+    server_name php.example.com;
+    pagespeed FileCachePath "@@SECONDARY_CACHE@@";
+
+    pagespeed off;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass   unix:/var/run/php5-fpm.sock;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+        include        @@FASTCGI_PARAMS@@;
+    }
+  }
+
+  server {
     listen       @@PRIMARY_PORT@@;
     server_name  localhost;
     pagespeed FileCachePath "@@FILE_CACHE@@";

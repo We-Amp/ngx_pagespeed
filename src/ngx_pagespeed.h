@@ -80,6 +80,24 @@ StringPiece str_to_string_piece(ngx_str_t s);
 char* string_piece_to_pool_string(ngx_pool_t* pool, StringPiece sp);
 ngx_int_t ps_fetch_handler(ngx_http_request_t *r);
 
+
+typedef struct {
+  net_instaweb::NgxBaseFetch* base_fetch;
+  bool write_pending;
+  bool fetch_done;
+  bool collect_headers;
+} ps_fetch_ctx_t;
+
+typedef struct {
+  net_instaweb::ProxyFetch* proxy_fetch;
+  net_instaweb::GzipInflater* inflater_;
+} ps_html_rewrite_ctx_t;
+
+typedef struct {
+  net_instaweb::RewriteDriver *driver;
+  net_instaweb::InPlaceResourceRecorder* recorder;
+} ps_inplace_ctx_t;
+
 typedef struct {
   net_instaweb::NgxBaseFetch* base_fetch;
   ngx_http_request_t* r;
@@ -91,12 +109,12 @@ typedef struct {
   // for in-place only
   net_instaweb::RewriteDriver *driver;
   net_instaweb::InPlaceResourceRecorder* recorder;
-  ngx_http_handler_pt fetch_checker;
 
   // use to handle pagespeed output
   bool write_pending;
-  bool modify_headers;
   bool fetch_done;
+
+  bool modify_headers;
   bool do_rewrite;
 } ps_request_ctx_t;
 

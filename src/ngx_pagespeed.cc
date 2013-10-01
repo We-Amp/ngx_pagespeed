@@ -1096,6 +1096,10 @@ void ps_connection_read_handler(ngx_event_t* ev) {
   CHECK(ev != NULL);
   ngx_connection_t* c = static_cast<ngx_connection_t*>(ev->data);
   CHECK(c != NULL);
+  ps_request_ctx_t* ctx = static_cast<ps_request_ctx_t*>(c->data);
+  CHECK(ctx != NULL);
+  ngx_http_request_t* r = ctx->r;
+  CHECK(r != NULL);
 
   int rc;
 
@@ -1112,13 +1116,9 @@ void ps_connection_read_handler(ngx_event_t* ev) {
 
     // Write peer close or error occur.
     ngx_close_connection(c);
+    ngx_http_finalize_request(r, NGX_DONE);  // Done with the request.
     return;
   }
-
-  ps_request_ctx_t* ctx = static_cast<ps_request_ctx_t*>(c->data);
-  CHECK(ctx != NULL);
-  ngx_http_request_t* r = ctx->r;
-  CHECK(r != NULL);
 
   // Clear the pipe.
   do {
@@ -1148,6 +1148,8 @@ void ps_connection_read_handler(ngx_event_t* ev) {
 }
 
 ngx_int_t ps_create_connection(ps_request_ctx_t* ctx, int pipe_fd) {
+  // With this new connection we need the request to stay around.
+  ctx->r->count++;
   ngx_connection_t* c = ngx_get_connection(pipe_fd, ctx->r->connection->log);
   if (c == NULL) {
     return NGX_ERROR;

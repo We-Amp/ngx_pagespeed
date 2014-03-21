@@ -2441,6 +2441,14 @@ OUT=$($WGET_DUMP --header=Host:date.example.com \
     http://$SECONDARY_HOSTNAME/mod_pagespeed_example/combine_css.html)
 check_from "$OUT" egrep -q '^Date: Fri, 16 Oct 2009 23:05:07 GMT'
 
+start_test deleted headers stay put
+WGET_ARGS=""
+URL="$SECONDARY_HOSTNAME/mod_pagespeed_example/"
+FETCH_CMD="$WGET_DUMP --header=Host:header-delete.example.com $URL"
+OUT=$($FETCH_CMD)
+check_not_from "$OUT" fgrep "X-PageSpeed"
+check_not_from "$OUT" fgrep "Server"
+
 if $USE_VALGRIND; then
     # It is possible that there are still ProxyFetches outstanding
     # at this point in time. Give them a few extra seconds to allow

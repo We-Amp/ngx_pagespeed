@@ -2507,6 +2507,13 @@ check_from "$OUT" egrep -q $'^Content-Length: ([0-9])*\r$'
 check_not_from "$OUT" egrep -iq $'^Transfer-Encoding: chunked\r$'
 check_not_from "$OUT" egrep -iq $'^Connection: close\r$'
 
+start_test Downstream cache integration cacheing headers.
+URL=$SECONDARY_HOSTNAME/mod_pagespeed_example/images/xCuppa.png.pagespeed.ic.0.png
+OUT=$($WGET_DUMP --header=Host:downstreamcacheresource.example.com --save-headers $URL)
+check_from "$OUT" egrep -iq $'^Cache-Control: .*\r$'
+check_from "$OUT" egrep -iq $'^Expires: .*\r$'
+check_from "$OUT" egrep -iq $'^Last-Modified: .*\r$'
+
 # Test handling of large HTML files. We first test with a cold cache, and verify
 # that we bail out of parsing and insert a script redirecting to
 # ?PageSpeed=off. This should also insert an entry into the property cache so

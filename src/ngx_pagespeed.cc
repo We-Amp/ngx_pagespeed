@@ -72,6 +72,8 @@
 #include "pagespeed/kernel/thread/pthread_shared_mem.h"
 #include "pagespeed/kernel/html/html_keywords.h"
 
+#include "ngx_gzip_setter.h"
+
 extern ngx_module_t ngx_pagespeed;
 
 // Hacks for debugging.
@@ -604,10 +606,19 @@ char* ps_configure(ngx_conf_t* cf,
   CHECK(n_args <= NGX_PAGESPEED_MAX_ARGS);
   StringPiece args[NGX_PAGESPEED_MAX_ARGS];
 
+
+
+
   ngx_str_t* value = static_cast<ngx_str_t*>(cf->args->elts);
   ngx_uint_t i;
   for (i = 0 ; i < n_args ; i++) {
     args[i] = str_to_string_piece(value[i+1]);
+  }
+
+  //keesspoelstra: ugly hack
+  if (n_args==1 && args[0].compare("on")==0)
+  {
+    gzip_setter.SetGZip(cf);
   }
 
   if (StringCaseEqual("UseNativeFetcher", args[0])) {
@@ -2735,6 +2746,16 @@ ngx_int_t ps_etag_filter_init(ngx_conf_t* cf) {
   return NGX_OK;
 }
 
+
+// keesspoelstra: called before configuration, setup an
+// intervention setter for gzip on
+ngx_int_t ps_pre_init(ngx_conf_t *cf)
+{
+  gzip_setter.Init();
+  return NGX_OK;
+}
+
+
 ngx_int_t ps_init(ngx_conf_t* cf) {
   // Only put register pagespeed code to run if there was a "pagespeed"
   // configuration option set in the config file.  With "pagespeed off" we
@@ -2784,7 +2805,7 @@ ngx_http_module_t ps_etag_filter_module = {
 };
 
 ngx_http_module_t ps_module = {
-  NULL,  // preconfiguration
+  ps_pre_init,  // preconfiguration
   ps_init,  // postconfiguration
 
   ps_create_main_conf,
@@ -2796,6 +2817,8 @@ ngx_http_module_t ps_module = {
   ps_create_loc_conf,
   ps_merge_loc_conf
 };
+
+
 
 // called after configuration is complete, but before nginx starts forking
 ngx_int_t ps_init_module(ngx_cycle_t* cycle) {

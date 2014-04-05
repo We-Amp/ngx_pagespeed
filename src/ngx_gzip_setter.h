@@ -1,4 +1,49 @@
+/*
+ * Copyright 2014 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+/*
+ * NgxGZipSetter sets up gzip for pagespeed
+ * with the following configuration:
+ * gzip  on;
+ * gzip_vary on;
+ * gzip_types application/ecmascript;
+ * gzip_types application/javascript;
+ * gzip_types application/json;
+ * gzip_types application/pdf;
+ * gzip_types application/postscript;
+ * gzip_types application/x-javascript;
+ * gzip_types image/svg+xml;
+ * gzip_types text/css;
+ * gzip_types text/csv;
+ * gzip_types text/javascript;
+ * gzip_types text/plain;
+ * gzip_types text/xml;
+ * gzip_http_version 1.0;
+ *
+ * If there is an explicit gzip configuration in the nginx.conf
+ * pagespeed will rollback the set configuration and let the
+ * user decide what the configuration will be.
+ *
+ * It sets the
+ */
+
+// Author: kspoelstra@we-amp.com (Kees Spoelstra)
+
+#ifndef SRC_NGX_GZIP_SETTER_H_
+#define SRC_NGX_GZIP_SETTER_H_
 extern "C" {
 #include <ngx_config.h>
 #include <ngx_core.h>
@@ -7,81 +52,51 @@ extern "C" {
 
 #include <vector>
 
-using namespace std;
+using std::vector;
 
+namespace net_instaweb {
 
-extern "C" {char *ngx_gzip_redirect_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);}
-
-
-
-class NgxGzipSetter
-{
-
-  vector<void *> _confs;
-  ngx_command_t *_gzip_command;
-  ngx_module_t *_gzip_module;
-  ngx_flag_t _enabled;
+// We need this class because configuration for gzip
+// is in different modules, so just saving the command
+// will not work.
+class ngx_command_ctx {
  public:
-  NgxGzipSetter():_gzip_command(NULL),_gzip_module(NULL),_enabled(0)
-  {
-
+  ngx_command_ctx():command_(NULL), module_(NULL) {
   }
-  ~NgxGzipSetter()
-  {
-    ;
-  }
-
-  ngx_flag_t enabled()
-  {
-    return _enabled;
-  }
-
-  void Init()
-  {
-    for (int m = 0; ngx_modules[m]; m++)
-    {
-      if (ngx_modules[m]->commands)
-        for (int c=0;ngx_modules[m]->commands[c].name.len;c++)
-        {
-          ngx_command_t *current_command=&ngx_modules[m]->commands[c];
-
-          if (ngx_strcmp("gzip", ngx_modules[m]->commands[c].name.data) == 0)
-          {
-            if (current_command->set==ngx_conf_set_flag_slot &&
-                        !(current_command->type&(NGX_DIRECT_CONF|NGX_MAIN_CONF)) &&
-                        current_command->conf==NGX_HTTP_LOC_CONF_OFFSET)
-            {
-              _gzip_command=&ngx_modules[m]->commands[c];
-              _gzip_command->set=ngx_gzip_redirect_conf_set_flag_slot;
-              _gzip_module=ngx_modules[m];
-              _enabled=1;
-            }
-            break;
-          }
-
-        }
-    }
-  }
-
-  void SetGZip(ngx_conf_t *cf)
-  {
-    if (!_enabled)
-      return;
-    void *gzip_conf=ngx_http_conf_get_module_loc_conf(cf,(*_gzip_module));
-    ngx_flag_t *flag=(ngx_flag_t *) (((char *) gzip_conf)+_gzip_command->offset);
-    *flag=1;
-    _confs.push_back(flag);
-  }
-
-
-  void RollBackAndDisable()
-  {
-    for(vector<void *>::iterator i=_confs.begin();i!=_confs.end();i++)
-    {
-      *((ngx_flag_t *) *i )=NGX_CONF_UNSET;
-    }
-    _enabled=0;
-  }
+  void *GetConfPtr(ngx_conf_t *cf);
+  void *GetModuleConfPtr(ngx_conf_t *cf);
+  ngx_command_t *command_;
+  ngx_module_t *module_;
 };
 
-extern NgxGzipSetter gzip_setter;
+class NgxGZipSetter {
+  vector<ngx_flag_t *> ngx_flags_set_;
+  vector<ngx_uint_t *> ngx_enums_set_;
+  vector<void *> ngx_httptypes_set_;
+  ngx_command_ctx gzip_command_;
+  ngx_command_ctx gzip_http_types_command_;
+  ngx_command_ctx gzip_vary_command_;
+  ngx_command_ctx gzip_http_version_command_;
+  bool enabled_;
+
+ public:
+  NgxGZipSetter();
+  ~NgxGZipSetter();
+  bool enabled() {return enabled_;}
+  void SetNgxConfFlag(ngx_conf_t *cf, ngx_command_ctx *command_ctx);
+  void SetNgxConfEnum(
+      ngx_conf_t *cf,
+      ngx_command_ctx *command_ctx,
+      ngx_uint_t value);
+  void Init();
+  void EnableGZipForLocation(ngx_conf_t *cf);
+  void AddGZipHTTPTypes(ngx_conf_t *cf);
+  void RollBackAndDisable();
+};
+
+// global access to g_gzip_setter
+// TODO(kspoelstra) could be moved to a pagespeed module context
+extern NgxGZipSetter g_gzip_setter;
+}  // namespace net_instaweb
+
+#endif  // SRC_NGX_GZIP_SETTER_H_

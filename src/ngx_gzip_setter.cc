@@ -149,7 +149,7 @@ gzs_init_result NgxGZipSetter::Init() {
         // ngx_http_gzip_filter_commands in ngx_http_gzip_filter.c
         // Code below is very verbose
         if (!gzip_command_.command_ &&
-            ngx_strcmp("gzip ", current_command->name.data) == 0) {
+            ngx_strcmp("gzip", current_command->name.data) == 0) {
           if (IsNgxFlagCommand(current_command)) {
             current_command->set = ngx_gzip_redirect_conf_set_flag_slot;
             gzip_command_.command_ = current_command;

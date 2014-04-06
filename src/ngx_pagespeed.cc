@@ -615,10 +615,10 @@ char* ps_configure(ngx_conf_t* cf,
     args[i] = str_to_string_piece(value[i+1]);
   }
 
-  //keesspoelstra: ugly hack
-  if (n_args==1 && args[0].compare("on")==0)
-  {
-    gzip_setter.SetGZip(cf);
+  // TODO(kspoelstra): could be moved into the config handler for ngx
+  if (n_args==1 && args[0].compare("on") == 0) {
+    // safe to call if the setter is disabled
+    g_gzip_setter.EnableGZipForLocation(cf);
   }
 
   if (StringCaseEqual("UseNativeFetcher", args[0])) {
@@ -2747,11 +2747,11 @@ ngx_int_t ps_etag_filter_init(ngx_conf_t* cf) {
 }
 
 
-// keesspoelstra: called before configuration, setup an
-// intervention setter for gzip on
-ngx_int_t ps_pre_init(ngx_conf_t *cf)
-{
-  gzip_setter.Init();
+// kspoelstra: called before configuration.
+ngx_int_t ps_pre_init(ngx_conf_t *cf) {
+  // Setup an intervention setter for gzip configuration and check
+  // gzip configuration command signatures.
+  g_gzip_setter.Init();
   return NGX_OK;
 }
 

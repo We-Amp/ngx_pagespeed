@@ -37,7 +37,12 @@
  * pagespeed will rollback the set configuration and let the
  * user decide what the configuration will be.
  *
- * It sets the
+ * It manipulates the configuration by manipulating ngx_flag_t
+ * and ngx_uint_t settings directly and using the nginx setter for
+ * gzip_http_types.
+ * this is probably a safe way to do it. If this mechanism
+ * changes all non nginx module setup & configuration will
+ * fail.
  */
 
 // Author: kspoelstra@we-amp.com (Kees Spoelstra)
@@ -69,6 +74,19 @@ class ngx_command_ctx {
   ngx_module_t *module_;
 };
 
+enum gzs_init_result {
+    kInitGZipOk,
+    kInitGZipNotFound,
+    kInitGZipSignatureMismatchFatal,
+    kInitGZipSecondarySignatureMismatch,
+    kInitGZipSecondaryMissing
+};
+enum gzs_enable_result {
+    kEnableGZipOk,
+    kEnableGZipPartial,
+    kEnableGZipNotEnabled
+};
+
 class NgxGZipSetter {
   vector<ngx_flag_t *> ngx_flags_set_;
   vector<ngx_uint_t *> ngx_enums_set_;
@@ -88,8 +106,8 @@ class NgxGZipSetter {
       ngx_conf_t *cf,
       ngx_command_ctx *command_ctx,
       ngx_uint_t value);
-  void Init();
-  void EnableGZipForLocation(ngx_conf_t *cf);
+  gzs_init_result Init();
+  gzs_enable_result EnableGZipForLocation(ngx_conf_t *cf);
   void AddGZipHTTPTypes(ngx_conf_t *cf);
   void RollBackAndDisable();
 };

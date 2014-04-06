@@ -27,7 +27,7 @@ NgxGZipSetter g_gzip_setter;
 
 extern "C" {
   // These functions replace the setters for
-  // gzip on/off
+  // gzip
   // gzip_types
   // gzip_http_version
   // gzip_vary
@@ -108,15 +108,34 @@ bool IsNgxEnumCommand(ngx_command_t *command) {
 // Also sets up redirects for the configurations
 // these redirect handle a rollback if expicit
 // configuration is found.
-// TODO(kspoelstra) return status
-// kGZipNotFound
-// gzip not found
-// kGZipSignatureMismatchFatal
-// gzip signature is not
-// kGZipSecondarySignatureMismatch
-// gzip is ok, but one of the other commands has a
-// signature mismatch.
-void NgxGZipSetter::Init() {
+// Returns:
+//
+// kInitGZipOk
+// gzip, gzip_vary, gzip_http_version and
+// gzip_types are found and signatures are ok.
+// gzip will be enabled.
+//
+// kInitGZipSecondarySignatureMismatch
+// gzip is ok, one of the other gzip functions has
+// an unexpected signature.
+// gzip will be partially enabled.
+//
+// kInitGZipSignatureMismatchFatal
+// gzip has an unexpected signature.
+// gzip will not be enabled.
+//
+// kInitGZipNotFound
+// gzip command is not found.
+// gzip will not be enabled.
+//
+// kInitGZipSecondaryMissing
+// one or more of the secondary gzip functions is
+// missing.
+// gzip will be partially enabled
+//
+gzs_init_result NgxGZipSetter::Init() {
+  int signature_mismatch_2nd = 0;
+  int signature_mismatch_1st = 0;
   for (int m = 0; ngx_modules[m]; m++) {
     if (ngx_modules[m]->commands) {
       for (int c = 0; ngx_modules[m]->commands[c].name.len; c++) {
@@ -130,45 +149,87 @@ void NgxGZipSetter::Init() {
         // ngx_http_gzip_filter_commands in ngx_http_gzip_filter.c
         // Code below is very verbose
         if (!gzip_command_.command_ &&
-            ngx_strcmp("gzip", current_command->name.data) == 0 &&
-            IsNgxFlagCommand(current_command)) {
-          current_command->set = ngx_gzip_redirect_conf_set_flag_slot;
-          gzip_command_.command_ = current_command;
-          gzip_command_.module_ = ngx_modules[m];
-          enabled_ = 1;
+            ngx_strcmp("gzip ", current_command->name.data) == 0) {
+          if (IsNgxFlagCommand(current_command)) {
+            current_command->set = ngx_gzip_redirect_conf_set_flag_slot;
+            gzip_command_.command_ = current_command;
+            gzip_command_.module_ = ngx_modules[m];
+            enabled_ = 1;
+          } else {
+            ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                          "Pagespeed: cannot set gzip, signature mismatch");
+            signature_mismatch_1st++;
+          }
         }
 
         if (!gzip_http_version_command_.command_ &&
-            ngx_strcmp("gzip_http_version", current_command->name.data) == 0 &&
-            IsNgxEnumCommand(current_command)) {
-          current_command->set = ngx_gzip_redirect_conf_set_enum_slot;
-          gzip_http_version_command_.command_ = current_command;
-          gzip_http_version_command_.module_ = ngx_modules[m];
-          enabled_ = 1;
+            ngx_strcmp("gzip_http_version", current_command->name.data) == 0) {
+          if (IsNgxEnumCommand(current_command)) {
+            current_command->set = ngx_gzip_redirect_conf_set_enum_slot;
+            gzip_http_version_command_.command_ = current_command;
+            gzip_http_version_command_.module_ = ngx_modules[m];
+          } else {
+            ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                          "Pagespeed: cannot set gzip_http_version,"
+                          " signature mismatch");
+            signature_mismatch_2nd++;
+          }
         }
 
         if (!gzip_http_types_command_.command_ &&
-            ngx_strcmp("gzip_types", current_command->name.data) == 0 &&
-            IsNgxHttpTypesCommand(current_command)) {
-          current_command->set = ngx_gzip_redirect_http_types_slot;
-          gzip_http_types_command_.command_ = current_command;
-          gzip_http_types_command_.module_ = ngx_modules[m];
+            ngx_strcmp("gzip_types", current_command->name.data) == 0) {
+          if (IsNgxHttpTypesCommand(current_command)) {
+            current_command->set = ngx_gzip_redirect_http_types_slot;
+            gzip_http_types_command_.command_ = current_command;
+            gzip_http_types_command_.module_ = ngx_modules[m];
+          } else {
+            ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                          "Pagespeed: cannot set gzip_types,"
+                          " signature mismatch");
+            signature_mismatch_2nd++;
+          }
         }
 
         if (!gzip_vary_command_.command_ &&
-            ngx_strcmp("gzip_vary", current_command->name.data) == 0 &&
-            IsNgxFlagCommand(current_command)) {
+            ngx_strcmp("gzip_vary", current_command->name.data) == 0) {
+          if (IsNgxFlagCommand(current_command)) {
           current_command->set = ngx_gzip_redirect_conf_set_flag_slot;
           gzip_vary_command_.command_ = current_command;
           gzip_vary_command_.module_ = ngx_modules[m];
+          } else {
+            ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                          "Pagespeed: cannot set gzip_vary,"
+                          " signature mismatch");
+            signature_mismatch_2nd++;
+          }
         }
       }
     }
   }
+  if (signature_mismatch_1st) {
+    return kInitGZipSignatureMismatchFatal;
+  } else if (!enabled_) {
+    ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                  "Pagespeed: cannot set gzip, command not found");
+    return kInitGZipNotFound;
+  } else if (signature_mismatch_2nd) {
+    return kInitGZipSecondarySignatureMismatch;
+  } else if (!gzip_vary_command_.command_) {
+    ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                  "Pagespeed: missing gzip_vary");
+    return kInitGZipSecondaryMissing;
+  } else if (!gzip_http_types_command_.command_) {
+    ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                  "Pagespeed: missing gzip_types");
+    return kInitGZipSecondaryMissing;
+  } else if (!gzip_http_version_command_.command_) {
+    ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                  "Pagespeed: missing gzip_http_version");
+    return kInitGZipSecondaryMissing;
+  } else {
+    return kInitGZipOk;
+  }
 }
-
-
-
 
 void *ngx_command_ctx::GetConfPtr(ngx_conf_t *cf) {
   char *conf_ptr = reinterpret_cast<char*>(GetModuleConfPtr(cf));
@@ -214,7 +275,7 @@ ngx_str_t gzip_http_types[]={
     ngx_string("image/svg+xml"),
     ngx_string("text/css"),
     ngx_string("text/csv"),
-    ngx_string("text/html"),
+    // ngx_string("text/html"),  // this is the default implied value
     ngx_string("text/javascript"),
     ngx_string("text/plain"),
     ngx_string("text/xml"),
@@ -222,9 +283,9 @@ ngx_str_t gzip_http_types[]={
 };
 
 // TODO(kspoelstra) return status
-void NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
+gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
   if (!enabled_)
-    return;
+    return kEnableGZipNotEnabled;
   if (gzip_command_.command_) {
     SetNgxConfFlag(cf, &gzip_command_);
   }
@@ -238,16 +299,20 @@ void NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
   // prone to future API changes, the signature
   // check should be enough to prevent problems.
   AddGZipHTTPTypes(cf);
+  return kEnableGZipOk;
 }
 
 
 // TODO(kspoelstra) return status
 void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
   if (gzip_http_types_command_.command_) {
-    // This should not happen, but if it does return
+    // Following should not happen, but if it does return
     // gracefully.
-    if (cf->args->nalloc < 2)
+    if (cf->args->nalloc < 2) {
+      ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
+                    "Pagespeed: unexpected small cf->args in gzip_types ");
       return;
+    }
 
     ngx_command_t *command = gzip_http_types_command_.command_;
     char *gzip_conf = reinterpret_cast<char *>(
@@ -271,6 +336,9 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
       // this should not be a problem for nginx.
       // We cannot use the gzip_http_types array here
       // because nginx will manipulate the values.
+      // TODO(kspoelstra) better would be to allocate this
+      //    once and not every time we enable gzip on
+      //    "pagespeed on"
       d.data = reinterpret_cast<u_char *>(
           ngx_pnalloc(cf->pool, http_types->len+1));
       strcpy(reinterpret_cast<char *>(d.data),
@@ -294,6 +362,8 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
 
 
 void NgxGZipSetter::RollBackAndDisable() {
+  ngx_log_error(NGX_LOG_INFO, ngx_cycle->log, 0,
+                "Pagespeed: rollback gzip, explicit configuration");
   for (vector<ngx_flag_t *>::iterator i = ngx_flags_set_.begin();
       i != ngx_flags_set_.end();
       i++) {

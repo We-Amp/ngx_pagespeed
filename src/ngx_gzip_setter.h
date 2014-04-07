@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// Author: kspoelstra@we-amp.com (Kees Spoelstra)
+
 /*
  * NgxGZipSetter sets up gzip for pagespeed
  * with the following configuration:
@@ -45,25 +47,25 @@
  * fail.
  */
 
-// Author: kspoelstra@we-amp.com (Kees Spoelstra)
+#ifndef NGX_GZIP_SETTER_H_
+#define NGX_GZIP_SETTER_H_
 
-#ifndef SRC_NGX_GZIP_SETTER_H_
-#define SRC_NGX_GZIP_SETTER_H_
 extern "C" {
-#include <ngx_config.h>
-#include <ngx_core.h>
-#include <ngx_http.h>
+  #include <ngx_config.h>
+  #include <ngx_core.h>
+  #include <ngx_http.h>
 }
 
 #include <vector>
+
+#include "net/instaweb/util/public/basictypes.h"
 
 using std::vector;
 
 namespace net_instaweb {
 
-// We need this class because configuration for gzip
-// is in different modules, so just saving the command
-// will not work.
+// We need this class because configuration for gzip is in different modules, so
+// just saving the command will not work.
 class ngx_command_ctx {
  public:
   ngx_command_ctx():command_(NULL), module_(NULL) {
@@ -81,6 +83,7 @@ enum gzs_init_result {
     kInitGZipSecondarySignatureMismatch,
     kInitGZipSecondaryMissing
 };
+
 enum gzs_enable_result {
     kEnableGZipOk,
     kEnableGZipPartial,
@@ -110,11 +113,13 @@ class NgxGZipSetter {
   gzs_enable_result EnableGZipForLocation(ngx_conf_t *cf);
   void AddGZipHTTPTypes(ngx_conf_t *cf);
   void RollBackAndDisable();
+
+  DISALLOW_COPY_AND_ASSIGN(NgxGZipSetter);
 };
 
-// global access to g_gzip_setter
-// TODO(kspoelstra) could be moved to a pagespeed module context
+// TODO(kspoelstra): Could be moved to a pagespeed module context.
 extern NgxGZipSetter g_gzip_setter;
+
 }  // namespace net_instaweb
 
-#endif  // SRC_NGX_GZIP_SETTER_H_
+#endif  // NGX_GZIP_SETTER_H_

@@ -30,6 +30,7 @@
 
 #include "ngx_base_fetch.h"
 #include "ngx_caching_headers.h"
+#include "ngx_gzip_setter.h"
 #include "ngx_list_iterator.h"
 #include "ngx_message_handler.h"
 #include "ngx_rewrite_driver_factory.h"
@@ -71,8 +72,6 @@
 #include "net/instaweb/util/stack_buffer.h"
 #include "pagespeed/kernel/thread/pthread_shared_mem.h"
 #include "pagespeed/kernel/html/html_keywords.h"
-
-#include "ngx_gzip_setter.h"
 
 extern ngx_module_t ngx_pagespeed;
 
@@ -606,9 +605,6 @@ char* ps_configure(ngx_conf_t* cf,
   CHECK(n_args <= NGX_PAGESPEED_MAX_ARGS);
   StringPiece args[NGX_PAGESPEED_MAX_ARGS];
 
-
-
-
   ngx_str_t* value = static_cast<ngx_str_t*>(cf->args->elts);
   ngx_uint_t i;
   for (i = 0 ; i < n_args ; i++) {
@@ -616,7 +612,7 @@ char* ps_configure(ngx_conf_t* cf,
   }
 
   // TODO(kspoelstra): could be moved into the config handler for ngx
-  if (n_args==1 && args[0].compare("on") == 0) {
+  if (n_args == 1 && args[0].compare("on") == 0) {
     // safe to call if the setter is disabled
     g_gzip_setter.EnableGZipForLocation(cf);
   }
@@ -2746,15 +2742,13 @@ ngx_int_t ps_etag_filter_init(ngx_conf_t* cf) {
   return NGX_OK;
 }
 
-
-// kspoelstra: called before configuration.
+// Called before configuration.
 ngx_int_t ps_pre_init(ngx_conf_t *cf) {
   // Setup an intervention setter for gzip configuration and check
   // gzip configuration command signatures.
   g_gzip_setter.Init();
   return NGX_OK;
 }
-
 
 ngx_int_t ps_init(ngx_conf_t* cf) {
   // Only put register pagespeed code to run if there was a "pagespeed"

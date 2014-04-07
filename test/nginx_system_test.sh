@@ -82,9 +82,7 @@ function keepalive_test() {
   done
 
   # Filter the curl output from unimportant messages
-  # kspoelstra: 
-  # Found bundle for host is emitted by new versions
-  # of curl
+  # 'Found bundle for host...' is emitted by newer versions of curl.
   OUT=$(cat "$TEST_TMP/$CURL_LOG_FILE"\
     | grep -v "^[<>]"\
     | grep -v "^{ \\[data not shown"\

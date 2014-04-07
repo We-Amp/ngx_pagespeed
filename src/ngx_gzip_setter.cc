@@ -17,12 +17,12 @@
 // Author: kspoelstra@we-amp.com (Kees Spoelstra)
 
 #include "ngx_gzip_setter.h"
+
 #include <ngx_conf_file.h>
 
 namespace net_instaweb {
 
-// global instance,
-// TODO(kspoelstra) could be moved to a pagespeed module context
+// TODO(kspoelstra): Could be moved to a pagespeed module context.
 NgxGZipSetter g_gzip_setter;
 
 extern "C" {
@@ -31,16 +31,11 @@ extern "C" {
   // gzip_types
   // gzip_http_version
   // gzip_vary
-  // If these functions are called it means there
-  // is an explicit gzip configuration.
-  // The gzip configuration set by pagespeed is
-  // then rollbacked and pagespeed will
-  // stop enabling gzip automatically.
+  // If these functions are called it means there is an explicit gzip
+  // configuration. The gzip configuration set by pagespeed is then rollbacked
+  // and pagespeed will stop enabling gzip automatically.
   char *ngx_gzip_redirect_conf_set_flag_slot(
-      ngx_conf_t *cf,
-      ngx_command_t *cmd,
-      void *conf
-    ) {
+      ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
     if (g_gzip_setter.enabled()) {
       g_gzip_setter.RollBackAndDisable();
     }
@@ -49,31 +44,26 @@ extern "C" {
   }
 
   char *ngx_gzip_redirect_http_types_slot(
-      ngx_conf_t *cf,
-      ngx_command_t *cmd,
-      void *conf
-    ) {
+      ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
     if (g_gzip_setter.enabled()) {
       g_gzip_setter.RollBackAndDisable();
     }
     char *ret = ngx_http_types_slot(cf, cmd, conf);
     return ret;
   }
+
   char *ngx_gzip_redirect_conf_set_enum_slot(
-        ngx_conf_t *cf,
-        ngx_command_t *cmd,
-        void *conf
-      ) {
+        ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
       if (g_gzip_setter.enabled()) {
         g_gzip_setter.RollBackAndDisable();
       }
       char *ret = ngx_conf_set_enum_slot(cf, cmd, conf);
       return ret;
-    }
+  }
 }
 
-NgxGZipSetter::NgxGZipSetter():
-    enabled_(0) {
+NgxGZipSetter::NgxGZipSetter()
+    : enabled_(0) {
 }
 
 NgxGZipSetter::~NgxGZipSetter() {
@@ -262,10 +252,8 @@ void NgxGZipSetter::SetNgxConfEnum(
   ngx_enums_set_.push_back(enum_to_set);
 }
 
-
-
 // These are the content types we want to compress.
-ngx_str_t gzip_http_types[]={
+ngx_str_t gzip_http_types[] = {
     ngx_string("application/ecmascript"),
     ngx_string("application/javascript"),
     ngx_string("application/json"),
@@ -282,7 +270,6 @@ ngx_str_t gzip_http_types[]={
     ngx_null_string  // indicates end of array
 };
 
-// TODO(kspoelstra) return status
 gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
   if (!enabled_)
     return kEnableGZipNotEnabled;
@@ -302,12 +289,10 @@ gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
   return kEnableGZipOk;
 }
 
-
-// TODO(kspoelstra) return status
+// TODO(kspoelstra): return status.
 void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
   if (gzip_http_types_command_.command_) {
-    // Following should not happen, but if it does return
-    // gracefully.
+    // Following should not happen, but if it does return gracefully.
     if (cf->args->nalloc < 2) {
       ngx_log_error(NGX_LOG_WARN, ngx_cycle->log, 0,
                     "Pagespeed: unexpected small cf->args in gzip_types ");
@@ -336,12 +321,12 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
       // this should not be a problem for nginx.
       // We cannot use the gzip_http_types array here
       // because nginx will manipulate the values.
-      // TODO(kspoelstra) better would be to allocate this
+      // TODO(kspoelstra): better would be to allocate this
       //    once and not every time we enable gzip on
       //    "pagespeed on"
       d.data = reinterpret_cast<u_char *>(
           ngx_pnalloc(cf->pool, http_types->len+1));
-      strcpy(reinterpret_cast<char *>(d.data),
+      snprintf(reinterpret_cast<char *>(d.data), http_types->len + 1, "%s",
           reinterpret_cast<const char *>(http_types->data));
       d.len = http_types->len;
       reinterpret_cast<ngx_str_t*>(cf->args->elts)[1] = d;
@@ -359,7 +344,6 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
     ngx_httptypes_set_.push_back(gzip_conf+command->offset);
   }
 }
-
 
 void NgxGZipSetter::RollBackAndDisable() {
   ngx_log_error(NGX_LOG_INFO, ngx_cycle->log, 0,
@@ -385,4 +369,5 @@ void NgxGZipSetter::RollBackAndDisable() {
   }
   enabled_ = 0;
 }
+
 }  // namespace net_instaweb

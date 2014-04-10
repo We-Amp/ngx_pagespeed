@@ -70,10 +70,10 @@ class ngx_command_ctx {
  public:
   ngx_command_ctx():command_(NULL), module_(NULL) {
   }
-  void *GetConfPtr(ngx_conf_t *cf);
-  void *GetModuleConfPtr(ngx_conf_t *cf);
-  ngx_command_t *command_;
-  ngx_module_t *module_;
+  void* GetConfPtr(ngx_conf_t* cf);
+  void* GetModuleConfPtr(ngx_conf_t* cf);
+  ngx_command_t* command_;
+  ngx_module_t* module_;
 };
 
 enum gzs_init_result {
@@ -91,9 +91,9 @@ enum gzs_enable_result {
 };
 
 class NgxGZipSetter {
-  vector<ngx_flag_t *> ngx_flags_set_;
-  vector<ngx_uint_t *> ngx_uint_set_;
-  vector<void *> ngx_httptypes_set_;
+  vector<ngx_flag_t*> ngx_flags_set_;
+  vector<ngx_uint_t*> ngx_uint_set_;
+  vector<void*> ngx_httptypes_set_;
   ngx_command_ctx gzip_command_;
   ngx_command_ctx gzip_http_types_command_;
   ngx_command_ctx gzip_proxied_command_;
@@ -106,21 +106,21 @@ class NgxGZipSetter {
   ~NgxGZipSetter();
   bool enabled() {return enabled_;}
   void SetNgxConfFlag(
-      ngx_conf_t *cf,
-      ngx_command_ctx *command_ctx,
+      ngx_conf_t* cf,
+      ngx_command_ctx* command_ctx,
       ngx_flag_t value);
   void SetNgxConfEnum(
-      ngx_conf_t *cf,
-      ngx_command_ctx *command_ctx,
+      ngx_conf_t* cf,
+      ngx_command_ctx* command_ctx,
       ngx_uint_t value);
   void SetNgxConfBitmask(
-        ngx_conf_t *cf,
-        ngx_command_ctx *command_ctx,
+        ngx_conf_t* cf,
+        ngx_command_ctx* command_ctx,
         ngx_uint_t value);
   gzs_init_result Init();
-  gzs_enable_result EnableGZipForLocation(ngx_conf_t *cf);
-  gzs_enable_result SetGZipForLocation(ngx_conf_t *cf, ngx_flag_t);
-  void AddGZipHTTPTypes(ngx_conf_t *cf);
+  gzs_enable_result EnableGZipForLocation(ngx_conf_t* cf);
+  gzs_enable_result SetGZipForLocation(ngx_conf_t* cf, ngx_flag_t);
+  void AddGZipHTTPTypes(ngx_conf_t* cf);
   void RollBackAndDisable();
 
  private:

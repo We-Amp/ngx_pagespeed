@@ -34,38 +34,38 @@ extern "C" {
   // If these functions are called it means there is an explicit gzip
   // configuration. The gzip configuration set by pagespeed is then rollbacked
   // and pagespeed will stop enabling gzip automatically.
-  char *ngx_gzip_redirect_conf_set_flag_slot(
-      ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+  char* ngx_gzip_redirect_conf_set_flag_slot(
+      ngx_conf_t* cf, ngx_command_t* cmd, void* conf) {
     if (g_gzip_setter.enabled()) {
       g_gzip_setter.RollBackAndDisable();
     }
-    char *ret = ngx_conf_set_flag_slot(cf, cmd, conf);
+    char* ret = ngx_conf_set_flag_slot(cf, cmd, conf);
     return ret;
   }
 
-  char *ngx_gzip_redirect_http_types_slot(
-      ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+  char* ngx_gzip_redirect_http_types_slot(
+      ngx_conf_t* cf, ngx_command_t* cmd, void* conf) {
     if (g_gzip_setter.enabled()) {
       g_gzip_setter.RollBackAndDisable();
     }
-    char *ret = ngx_http_types_slot(cf, cmd, conf);
+    char* ret = ngx_http_types_slot(cf, cmd, conf);
     return ret;
   }
 
-  char *ngx_gzip_redirect_conf_set_enum_slot(
-        ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+  char* ngx_gzip_redirect_conf_set_enum_slot(
+        ngx_conf_t* cf, ngx_command_t* cmd, void* conf) {
       if (g_gzip_setter.enabled()) {
         g_gzip_setter.RollBackAndDisable();
       }
-      char *ret = ngx_conf_set_enum_slot(cf, cmd, conf);
+      char* ret = ngx_conf_set_enum_slot(cf, cmd, conf);
       return ret;
   }
-  char *ngx_gzip_redirect_conf_set_bitmask_slot(
-          ngx_conf_t *cf, ngx_command_t *cmd, void *conf) {
+  char* ngx_gzip_redirect_conf_set_bitmask_slot(
+          ngx_conf_t* cf, ngx_command_t* cmd, void* conf) {
         if (g_gzip_setter.enabled()) {
           g_gzip_setter.RollBackAndDisable();
         }
-        char *ret = ngx_conf_set_bitmask_slot(cf, cmd, conf);
+        char* ret = ngx_conf_set_bitmask_slot(cf, cmd, conf);
         return ret;
     }
 }
@@ -78,39 +78,36 @@ NgxGZipSetter::~NgxGZipSetter() {
 }
 
 // Helper functions to determine signature
-bool HasLocalConfig(ngx_command_t *command) {
+bool HasLocalConfig(ngx_command_t* command) {
   return !(command->type&(NGX_DIRECT_CONF|NGX_MAIN_CONF)) &&
                 command->conf == NGX_HTTP_LOC_CONF_OFFSET;
 }
 
-bool IsNgxFlagCommand(ngx_command_t *command) {
+bool IsNgxFlagCommand(ngx_command_t* command) {
   return (
       command->set == ngx_conf_set_flag_slot &&
       HasLocalConfig(command));
 }
 
-bool IsNgxHttpTypesCommand(ngx_command_t *command) {
+bool IsNgxHttpTypesCommand(ngx_command_t* command) {
   return (command->set == ngx_http_types_slot &&
               HasLocalConfig(command));
 }
-bool IsNgxEnumCommand(ngx_command_t *command) {
+bool IsNgxEnumCommand(ngx_command_t* command) {
   return (command->set == ngx_conf_set_enum_slot &&
               HasLocalConfig(command));
 }
 
-bool IsNgxBitmaskCommand(ngx_command_t *command) {
+bool IsNgxBitmaskCommand(ngx_command_t* command) {
   return (command->set == ngx_conf_set_bitmask_slot &&
               HasLocalConfig(command));
 }
 
 // Initialize the NgxGzipSetter.
-// Find the gzip, gzip_vary, gzip_http_version and
-// gzip_types commands in the gzip module
-// enable if the signature of the zip command
-// matches with what we trust.
-// Also sets up redirects for the configurations
-// these redirect handle a rollback if expicit
-// configuration is found.
+// Find the gzip, gzip_vary, gzip_http_version and gzip_types commands in the
+// gzip module. Enable if the signature of the zip command matches with what we
+// trust. Also sets up redirects for the configurations. These redirect handle
+// a rollback if expicit configuration is found.
 // Returns:
 //
 // kInitGZipOk
@@ -142,7 +139,7 @@ gzs_init_result NgxGZipSetter::Init() {
   for (int m = 0; ngx_modules[m]; m++) {
     if (ngx_modules[m]->commands) {
       for (int c = 0; ngx_modules[m]->commands[c].name.len; c++) {
-        ngx_command_t *current_command=&ngx_modules[m]->commands[c];
+        ngx_command_t* current_command=&ngx_modules[m]->commands[c];
 
         // We look for the gzip command , and the exact signature we trust
         // this means configured as an config location offset
@@ -252,45 +249,45 @@ gzs_init_result NgxGZipSetter::Init() {
   }
 }
 
-void *ngx_command_ctx::GetConfPtr(ngx_conf_t *cf) {
-  char *conf_ptr = reinterpret_cast<char*>(GetModuleConfPtr(cf));
+void* ngx_command_ctx::GetConfPtr(ngx_conf_t* cf) {
+  char* conf_ptr = reinterpret_cast<char*>(GetModuleConfPtr(cf));
   return (conf_ptr+command_->offset);
 }
 
-void *ngx_command_ctx::GetModuleConfPtr(ngx_conf_t *cf) {
+void* ngx_command_ctx::GetModuleConfPtr(ngx_conf_t* cf) {
   return (ngx_http_conf_get_module_loc_conf(cf, (*(module_))));
 }
 
 void NgxGZipSetter::SetNgxConfFlag(
-    ngx_conf_t *cf,
-    ngx_command_ctx *command_ctx,
+    ngx_conf_t* cf,
+    ngx_command_ctx* command_ctx,
     ngx_flag_t value
     ) {
-  ngx_flag_t *flag =
-      reinterpret_cast<ngx_flag_t *>(command_ctx->GetConfPtr(cf));
+  ngx_flag_t* flag =
+      reinterpret_cast<ngx_flag_t*>(command_ctx->GetConfPtr(cf));
   *flag = value;
   // Save the flag position for possible rollback.
   ngx_flags_set_.push_back(flag);
 }
 
 void NgxGZipSetter::SetNgxConfEnum(
-    ngx_conf_t *cf,
-    ngx_command_ctx *command_ctx,
+    ngx_conf_t* cf,
+    ngx_command_ctx* command_ctx,
     ngx_uint_t value
     ) {
-  ngx_uint_t *enum_to_set =
-      reinterpret_cast<ngx_uint_t *>(command_ctx->GetConfPtr(cf));
+  ngx_uint_t* enum_to_set =
+      reinterpret_cast<ngx_uint_t*>(command_ctx->GetConfPtr(cf));
   *enum_to_set = value;
   ngx_uint_set_.push_back(enum_to_set);
 }
 
 void NgxGZipSetter::SetNgxConfBitmask(
-    ngx_conf_t *cf,
-    ngx_command_ctx *command_ctx,
+    ngx_conf_t* cf,
+    ngx_command_ctx* command_ctx,
     ngx_uint_t value
     ) {
-  ngx_uint_t *enum_to_set =
-      reinterpret_cast<ngx_uint_t *>(command_ctx->GetConfPtr(cf));
+  ngx_uint_t* enum_to_set =
+      reinterpret_cast<ngx_uint_t*>(command_ctx->GetConfPtr(cf));
   *enum_to_set = value;
   ngx_uint_set_.push_back(enum_to_set);
 }
@@ -315,7 +312,7 @@ ngx_str_t gzip_http_types[] = {
 };
 
 gzs_enable_result NgxGZipSetter::SetGZipForLocation(
-    ngx_conf_t *cf,
+    ngx_conf_t* cf,
     ngx_flag_t value) {
   if (!enabled_)
       return kEnableGZipNotEnabled;
@@ -325,9 +322,19 @@ gzs_enable_result NgxGZipSetter::SetGZipForLocation(
   return kEnableGZipOk;
 }
 
-gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
-  if (!enabled_)
+//@keesspoelstra: return value seems to be ignored
+gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t* cf) {
+  if (!enabled_) {
     return kEnableGZipNotEnabled;
+  }
+
+  // When we get called twice for the same location{}, we ignore the second call
+  // to prevent adding duplicate gzip http types and so on.
+  ngx_flag_t* flag =
+      reinterpret_cast<ngx_flag_t*>(gzip_command_.GetConfPtr(cf));
+  if (*flag == 1) {
+    return kEnableGZipOk;
+  }
   SetGZipForLocation(cf, 1);
   if (gzip_vary_command_.command_) {
     SetNgxConfFlag(cf, &gzip_vary_command_, 1);
@@ -339,7 +346,10 @@ gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
       SetNgxConfBitmask(cf,
                         &gzip_http_version_command_,
                         NGX_HTTP_GZIP_PROXIED_ANY);
-    }
+  }
+
+  // @keesspoelstra: can we remove this comment? Or
+  // does this need more work?
   // Do we want to do this, this is actually
   // prone to future API changes, the signature
   // check should be enough to prevent problems.
@@ -347,8 +357,9 @@ gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
   return kEnableGZipOk;
 }
 
+// @keesspoelstra: either remove the todo or fix it?
 // TODO(kspoelstra): return status.
-void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
+void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t* cf) {
   if (gzip_http_types_command_.command_) {
     // Following should not happen, but if it does return gracefully.
     if (cf->args->nalloc < 2) {
@@ -357,8 +368,8 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
       return;
     }
 
-    ngx_command_t *command = gzip_http_types_command_.command_;
-    char *gzip_conf = reinterpret_cast<char *>(
+    ngx_command_t* command = gzip_http_types_command_.command_;
+    char* gzip_conf = reinterpret_cast<char* >(
         gzip_http_types_command_.GetModuleConfPtr(cf));
 
     // Backup the old settings.
@@ -371,21 +382,18 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
     reinterpret_cast<ngx_str_t*>(cf->args->elts)[0]=gzip_types_string;
     cf->args->nelts = 2;
 
-    ngx_str_t *http_types = gzip_http_types;
+    ngx_str_t* http_types = gzip_http_types;
     while (http_types->data) {
       ngx_str_t d;
-      // We allocate the http type on the configuration
-      // pool and actually leak this if we rollback,
-      // this should not be a problem for nginx.
-      // We cannot use the gzip_http_types array here
+      // TODO(kspoelstra): We allocate the http type on the configuration pool and actually
+      // leak this if we rollback. We cannot use the gzip_http_types array here
       // because nginx will manipulate the values.
-      // TODO(kspoelstra): better would be to allocate this
-      //    once and not every time we enable gzip on
-      //    "pagespeed on"
-      d.data = reinterpret_cast<u_char *>(
+      // TODO(kspoelstra): better would be to allocate this once and not every time we
+      // enable gzip.
+      d.data = reinterpret_cast<u_char* >(
           ngx_pnalloc(cf->pool, http_types->len+1));
-      snprintf(reinterpret_cast<char *>(d.data), http_types->len + 1, "%s",
-          reinterpret_cast<const char *>(http_types->data));
+      snprintf(reinterpret_cast<char* >(d.data), http_types->len + 1, "%s",
+          reinterpret_cast<const char* >(http_types->data));
       d.len = http_types->len;
       reinterpret_cast<ngx_str_t*>(cf->args->elts)[1] = d;
       // Call the original setter.
@@ -406,21 +414,20 @@ void NgxGZipSetter::AddGZipHTTPTypes(ngx_conf_t *cf) {
 void NgxGZipSetter::RollBackAndDisable() {
   ngx_log_error(NGX_LOG_INFO, ngx_cycle->log, 0,
                 "Pagespeed: rollback gzip, explicit configuration");
-  for (vector<ngx_flag_t *>::iterator i = ngx_flags_set_.begin();
+  for (vector<ngx_flag_t*>::iterator i = ngx_flags_set_.begin();
       i != ngx_flags_set_.end();
       i++) {
     *(*i)=NGX_CONF_UNSET;
   }
-  for (vector<ngx_uint_t *>::iterator i = ngx_uint_set_.begin();
+  for (vector<ngx_uint_t*>::iterator i = ngx_uint_set_.begin();
         i != ngx_uint_set_.end();
         i++) {
       *(*i)=NGX_CONF_UNSET_UINT;
-    }
-
-  for (vector<void *>::iterator i = ngx_httptypes_set_.begin();
+  }
+  for (vector<void*>::iterator i = ngx_httptypes_set_.begin();
       i != ngx_httptypes_set_.end();
       i++) {
-    ngx_array_t **type_array = reinterpret_cast<ngx_array_t **> (*i);
+    ngx_array_t** type_array = reinterpret_cast<ngx_array_t**> (*i);
     ngx_array_destroy(*type_array);
 
     *type_array = NULL;

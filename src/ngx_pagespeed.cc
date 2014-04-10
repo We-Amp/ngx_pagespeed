@@ -552,7 +552,9 @@ char* ps_configure(ngx_conf_t* cf,
   }
 
   // TODO(kspoelstra): could be moved into the config handler for ngx
-  if (n_args == 1 && args[0].compare("on") == 0) {
+  if ((n_args == 1 && StringCaseEqual(args[0], "on"))
+      || (n_args == 2 && StringCaseEqual(args[0], "InPlaceResourceOptimization")
+          && StringCaseEqual(args[1], "on"))) {
     // safe to call if the setter is disabled
     g_gzip_setter.EnableGZipForLocation(cf);
   }

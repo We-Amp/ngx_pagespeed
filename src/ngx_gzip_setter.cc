@@ -328,6 +328,14 @@ gzs_enable_result NgxGZipSetter::SetGZipForLocation(
 gzs_enable_result NgxGZipSetter::EnableGZipForLocation(ngx_conf_t *cf) {
   if (!enabled_)
     return kEnableGZipNotEnabled;
+
+  // When we get called twice for the same location{}, we ignore the second call,
+  // to prevent adding duplicate gzip http types and so on.
+  ngx_flag_t* flag =
+      reinterpret_cast<ngx_flag_t*>(gzip_command_.GetConfPtr(cf));
+  if (*flag == 1) {
+    return kEnableGZipOk;
+  }
   SetGZipForLocation(cf, 1);
   if (gzip_vary_command_.command_) {
     SetNgxConfFlag(cf, &gzip_vary_command_, 1);

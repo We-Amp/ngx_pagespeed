@@ -1,40 +1,42 @@
-![ngx_pagespeed](https://user-images.githubusercontent.com/6751650/73116078-338a9180-3f0f-11ea-8fdf-8c99cb4bec7f.png)
+# ngx_pagespeed
 
-[![Build Status](https://travis-ci.org/apache/incubator-pagespeed-ngx.svg?branch=master)](https://travis-ci.org/apache/incubator-pagespeed-ngx)
+**ngx_pagespeed is maintained again — under the [ModPageSpeed](https://modpagespeed.com/) project at We-Amp.**
 
-ngx_pagespeed speeds up your site and reduces page load time by automatically
-applying web performance best practices to pages and associated assets (CSS,
-JavaScript, images) without requiring you to modify your existing content or
-workflow. Features include:
+ngx_pagespeed was created at Google as the nginx port of mod_pagespeed. Google released its final upstream version in 2020. We-Amp picked it up. Active development continues under two product lines, both nginx-supported:
 
-- Image optimization: stripping meta-data, dynamic resizing, recompression
-- CSS & JavaScript minification, concatenation, inlining, and outlining
-- Small resource inlining
-- Deferring image and JavaScript loading
-- HTML rewriting
-- Cache lifetime extension
-- and
-  [more](https://developers.google.com/speed/docs/mod_pagespeed/config_filters)
+- **[ModPageSpeed 2.0](https://modpagespeed.com/)** — a ground-up C++23 rewrite. Available **today** as a Docker / nginx reverse-proxy and as an ASP.NET Core middleware. A bare-metal nginx module is in active development.
+- **[mod_pagespeed 1.1](https://modpagespeed.com/1.1/)** — the maintained continuation of the open-source module. Drop-in replacement for the original mod_pagespeed and ngx_pagespeed configurations, with security patches and the new Cyclone Cache. **Apache and IIS are GA today; nginx ships next.**
 
-To see ngx_pagespeed in action, with example pages for each of the
-optimizations, see our <a href="http://ngxpagespeed.com">demonstration site</a>.
+If you are running ngx_pagespeed today, your existing configuration is compatible with both product lines.
 
-## How to build
+| | |
+|---|---|
+| **Try ModPageSpeed 2.0 (Docker / nginx reverse proxy)** | [Quickstart →](https://modpagespeed.com/docs/) |
+| **Run nginx today and want a drop-in upgrade** | [mod_pagespeed 1.1 →](https://modpagespeed.com/1.1/) |
+| **Get notified when nginx 1.1 / nginx 2.0 ship** | [Sign up →](https://modpagespeed.com/download/) |
+| **Pricing** | [$49/server/month — 14-day free trial →](https://modpagespeed.com/pricing/) |
+| **Support** | [Email the maintainer →](https://modpagespeed.com/contact/) |
 
-Follow the steps on <a
-href="https://developers.google.com/speed/pagespeed/module/build_ngx_pagespeed_from_source">build
-ngx_pagespeed from source</a>.
+## What you get
 
-## How to use
+- **Drop-in configuration** — your existing `pagespeed` directives keep working.
+- **Security patches** for known CVEs that accumulated against the archived upstream.
+- **Cyclone Cache** — a new C++23 lock-free shared-memory cache; replaces the legacy file cache. No tuning, automatic warm-up.
+- **Active maintenance** — regular releases, modern Bazel build, pre-built binaries for amd64 and arm64.
+- **Direct maintainer support** included with every license.
 
-Follow the steps on <a
-href="https://developers.google.com/speed/pagespeed/module/configuration">PageSpeed
-configuration</a>.
+## About this repository
 
-For feedback, questions, and to follow
-the progress of the project:
+This repository exists as a public landing point for the ngx_pagespeed project under We-Amp's stewardship. Active development happens in the ModPageSpeed product repositories; **all downloads, documentation, and support are at [modpagespeed.com](https://modpagespeed.com/)**.
 
-- [ngx-pagespeed-discuss mailing
-  list](https://groups.google.com/forum/#!forum/ngx-pagespeed-discuss)
-- [ngx-pagespeed-announce mailing
-  list](https://groups.google.com/forum/#!forum/ngx-pagespeed-announce)
+For issues or questions about a running deployment, please [contact the maintainer](https://modpagespeed.com/contact/).
+
+## License
+
+ModPageSpeed and mod_pagespeed 1.1 are distributed under the [Business Source License 1.1](https://modpagespeed.com/license/). The first 14 days are a free trial. See [pricing](https://modpagespeed.com/pricing/) for license details.
+
+## Background
+
+ngx_pagespeed was created at Google as the nginx port of the original mod_pagespeed Apache module — adopted by thousands of servers worldwide. After Google archived the project, We-Amp B.V. — a Dutch company founded by the former mod_pagespeed maintainer ([Otto van der Schaaf](https://github.com/oschaaf), Apache PageSpeed committer and IPMC member) — continued active development.
+
+Learn more about We-Amp's open-source work: [we-amp.com/open-source/](https://we-amp.com/open-source/).

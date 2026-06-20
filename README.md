@@ -37,6 +37,6 @@ ModPageSpeed and mod_pagespeed 1.15 are distributed under the [Business Source L
 
 ## Background
 
-ngx_pagespeed was created at Google as the nginx port of the original mod_pagespeed Apache module — adopted by thousands of servers worldwide. After Google archived the project, We-Amp B.V. — a Dutch company founded by the former mod_pagespeed maintainer ([Otto van der Schaaf](https://github.com/oschaaf), Apache PageSpeed committer and IPMC member) — continued active development.
+ngx_pagespeed was created at Google as the nginx port of the original mod_pagespeed Apache module — adopted by thousands of servers worldwide. After Google archived the project, We-Amp B.V. — a Dutch company that helped build and maintain ngx_pagespeed and mod_pagespeed continued active development.
 
 Learn more about We-Amp's open-source work: [we-amp.com/open-source/](https://we-amp.com/open-source/).

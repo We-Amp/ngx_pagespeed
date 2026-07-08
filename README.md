@@ -11,19 +11,19 @@ If you are running ngx_pagespeed today, your existing configuration is compatibl
 
 | | |
 |---|---|
-| **Try ModPageSpeed 2.0 (Docker / nginx reverse proxy)** | [Quickstart →](https://modpagespeed.com/docs/) |
 | **Run nginx today and want a drop-in upgrade** | [mod_pagespeed 1.15 →](https://modpagespeed.com/1.1/) |
+| **Try ModPageSpeed 2.0 (Docker / nginx reverse proxy)** | [Quickstart →](https://modpagespeed.com/docs/) |
 | **Get notified when the native, in-process ModPageSpeed 2.0 nginx module ships** | [Sign up →](https://modpagespeed.com/download/) |
-| **Pricing** | [$49/server/month — free to install and evaluate, license required for production →](https://modpagespeed.com/pricing/) |
 | **Support** | [Email the maintainer →](https://modpagespeed.com/contact/) |
 
 ## What you get
 
-- **Drop-in configuration** — your existing `pagespeed` directives keep working.
-- **Security patches** for known CVEs that accumulated against the archived upstream.
-- **Cyclone Cache** — a new C++23 lock-free shared-memory cache; replaces the legacy file cache. No tuning, automatic warm-up.
-- **Active maintenance** — regular releases, modern Bazel build, pre-built signed apt/yum packages for amd64 and arm64.
-- **Direct maintainer support** included with every license.
+- **Drop-in** — your existing `pagespeed` directives keep working.
+- **Security** for known CVEs that accumulated against the archived upstream + security patches in mod_pagespeed's linked automatic lib, security fixes in ngx_pagespeed, patched libcurl based fetching, hardened builds, active security monitoring, SBOM+gripe, the list is long. Backported enhancements from our maintained IIS line for pagespeed_automatic + fetcher flows, which never stopped being maintained.  
+- **Modern build chain** modern tooling and scanning, first class citizen in CI/CD, hardened builds.
+- **Cyclone Cache** — a new C++23 lock-free shared-memory cache; replaces the legacy file cache. No tuning, automatic warm-up. Coming up: zero copy serving of optimized assets: ballpark +50% throughput, -50% latency, better long tail, (far) less memory usage under pressure: https://modpagespeed.com/blog/cyclone-cache-vs-file-cache-benchmark/.
+- **(Pro)active maintenance** — regular releases, modern Bazel build, pre-built signed apt/yum packages for amd64 and arm64.
+- **Direct maintainer support** for licensed installs.
 
 ## About this repository
 

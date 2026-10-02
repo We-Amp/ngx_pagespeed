@@ -1,39 +1,46 @@
 # ngx_pagespeed
 
-**ngx_pagespeed is maintained again — under the [ModPageSpeed](https://modpagespeed.com/) project at We-Amp.**
+> **This repository is archived. ngx_pagespeed lives on as the nginx module of
+> [mod_pagespeed 2.1](https://github.com/We-Amp/mod_pagespeed), which is open source
+> under the Apache License 2.0.**
+>
+> Source: [`We-Amp/mod_pagespeed` → `pagespeed/nginx/`](https://github.com/We-Amp/mod_pagespeed/tree/master/pagespeed/nginx)
+> · Install: [nginx guide](https://github.com/We-Amp/mod_pagespeed/blob/master/docs/install-nginx.md)
+> · Issues: [We-Amp/mod_pagespeed/issues](https://github.com/We-Amp/mod_pagespeed/issues)
 
-ngx_pagespeed was created at Google as the nginx port of mod_pagespeed. Google released its final upstream version in 2020. We-Amp picked it up. Active development continues under two product lines:
-
-- **[ModPageSpeed 2.0](https://modpagespeed.com/)** — a ground-up C++23 rewrite. Available **today** as a Docker / nginx reverse-proxy and as an ASP.NET Core middleware. A bare-metal, in-process nginx module is in active development.
-- **[mod_pagespeed 1.15](https://modpagespeed.com/1.1/)** — the maintained continuation of the open-source module (renumbered from 1.1; Google's final was 1.14.36.1). Drop-in replacement for the original mod_pagespeed and ngx_pagespeed configurations, with security patches and the new Cyclone Cache. **nginx, Apache, and IIS are GA today** — nginx ships as prebuilt, signed apt/yum packages (`nginx-module-pagespeed`) for Debian and Ubuntu. Envoy is experimental.
-
-If you are running ngx_pagespeed today, your existing configuration is compatible with both product lines.
+## Where to go
 
 | | |
 |---|---|
-| **Run nginx today and want a drop-in upgrade** | [mod_pagespeed 1.15 →](https://modpagespeed.com/1.1/) |
-| **Try ModPageSpeed 2.0 (Docker / nginx reverse proxy)** | [Quickstart →](https://modpagespeed.com/docs/) |
-| **Get notified when the native, in-process ModPageSpeed 2.0 nginx module ships** | [Sign up →](https://modpagespeed.com/download/) |
-| **Support** | [Email the maintainer →](https://modpagespeed.com/contact/) |
+| **Read or build the nginx module source** | [`pagespeed/nginx/` in We-Amp/mod_pagespeed →](https://github.com/We-Amp/mod_pagespeed/tree/master/pagespeed/nginx) |
+| **Install the prebuilt, signed module** (`nginx-module-pagespeed`, apt/dnf, amd64 + arm64) | [Install guide →](https://github.com/We-Amp/mod_pagespeed/blob/master/docs/install-nginx.md) |
+| **Documentation** | [modpagespeed.com/docs →](https://modpagespeed.com/docs/) |
+| **Report a bug or ask a question** | [Open an issue →](https://github.com/We-Amp/mod_pagespeed/issues) |
+| **Commercial support** | [Contact →](https://modpagespeed.com/contact/) |
 
-## What you get
+## Why this repository is archived
 
-- **Drop-in** — your existing `pagespeed` directives keep working.
-- **Security** for known CVEs that accumulated against the archived upstream + security patches in mod_pagespeed's linked automatic lib, security fixes in ngx_pagespeed, patched libcurl based fetching, hardened builds, active security monitoring, SBOM+gripe, the list is long. Backported enhancements from our maintained IIS line for pagespeed_automatic + fetcher flows, which never stopped being maintained.  
-- **Modern build chain** modern tooling and scanning, first class citizen in CI/CD, hardened builds.
-- **Cyclone Cache** — a new C++23 lock-free shared-memory cache; replaces the legacy file cache. No tuning, automatic warm-up. Coming up: zero copy serving of optimized assets: ballpark +50% throughput, -50% latency, better long tail, (far) less memory usage under pressure: https://modpagespeed.com/blog/cyclone-cache-vs-file-cache-benchmark/.
-- **(Pro)active maintenance** — regular releases, modern Bazel build, pre-built signed apt/yum packages for amd64 and arm64.
-- **Direct maintainer support** for licensed installs.
+The nginx, Apache, IIS and Envoy integrations of PageSpeed now live together in one
+source tree, [We-Amp/mod_pagespeed](https://github.com/We-Amp/mod_pagespeed), where they
+share a single build, test suite and release train across the supported platform
+matrix. That tree is the continuation of this code: existing `pagespeed` directives
+keep working, and it carries the security and correctness fixes that this archived
+tree does not. Do not build from this repository; build from
+[We-Amp/mod_pagespeed](https://github.com/We-Amp/mod_pagespeed) instead.
 
-## About this repository
+What you get there:
 
-This repository exists as a public landing point for the ngx_pagespeed project under We-Amp's stewardship. Active development happens in the ModPageSpeed product repositories; **all downloads, documentation, and support are at [modpagespeed.com](https://modpagespeed.com/)**.
+- **Drop-in** — existing ngx_pagespeed and mod_pagespeed configurations are compatible.
+- **mod_pagespeed 2.1** — the converged product line: the serving module, the
+  `pagespeed-optimizer` daemon for in-place resource optimization, and
+  [Cyclone Cache](https://github.com/We-Amp/cyclone-cache), a C++23 shared-memory cache
+  that replaces the legacy file cache.
+- **Open source** — Apache License 2.0. [Support is what's for sale.](https://modpagespeed.com/pricing/)
+- **Prebuilt, signed packages** for Debian, Ubuntu and EL9 (amd64 + arm64), built
+  against each distribution's stock nginx.
 
-For issues or questions about a running deployment, please [contact the maintainer](https://modpagespeed.com/contact/).
-
-## License
-
-ModPageSpeed and mod_pagespeed 1.15 are distributed under the [Business Source License 1.1](https://modpagespeed.com/license/); source publication is planned (no date committed). You can install and run the module unlicensed to evaluate it — it fully optimizes and simply adds an `X-PageSpeed-Warn: unlicensed` response header. A commercial license is required for production use. See [pricing](https://modpagespeed.com/pricing/) for license details.
+This repository stays online, read-only, so that existing links, forks and the
+2014-era release tags keep resolving.
 
 ## Background
 
